@@ -2,26 +2,36 @@
 #include <stdlib.h>
 #include <string.h>
 
-/*
-char find_file_by_name(char filename[256]){
-    char cmd[] = "find / -iname %s 2>/dev/null | tail -n 1";
+
+void get_full_file_path(char* filename){
+    char cmd[256];
+    sprintf(cmd, "find / -iname %s 2>/dev/null | tail -n 1", filename);
+    
+    //printf("CMD: %s \n", cmd);
+    
     FILE* shell = popen(cmd,"r");
 
-    char shell_output[512];  //will be full filepath of filename
+    char shell_output[256] = "\0";
 
-    fgets(shell_output, sizeof(shell_output), shell);
-
-    if(shell_output){
-        return shell_output;
+    while(fgets(shell_output, sizeof(shell_output), shell)){
+        //printf("SHELL OUTPUT:  %s \n", shell_output);
     }
+    
+    pclose(shell);
 
-    printf("ERROR -- file not found on this system. Nothing to return.");
-    return NULL;
+    if(shell_output[0] == '\0'){
+        printf("ERROR -- nothing returned by 'find' shell cmd. File may not exist.\n");
+        exit(1);
+    }
+    
+    //remove newline char
+    shell_output[strlen(shell_output)-1] = '\0';
+
+    strcpy(filename, shell_output);
 }
-*/
 
 
-int get_num_vowels(char filepath[512]){
+int get_num_vowels(char filepath[256]){
 
     FILE* fp = fopen(filepath, "r");
 
@@ -30,7 +40,7 @@ int get_num_vowels(char filepath[512]){
         return 1;
     }
 
-    char curr;
+    char* curr;
 
     int a = 0;
     int e = 0;
@@ -51,7 +61,7 @@ int get_num_vowels(char filepath[512]){
             u++;
     }
 
-    printf("\nNumber of vowels in given file: \n\n");
+    printf("\nNumber of vowels in the given file: \n\n");
     printf("a:  %d \ne:  %d \ni:  %d \no:  %d \nu:  %d \n\n", a, e, i, o, u);
 
     fclose(fp);
@@ -60,38 +70,28 @@ int get_num_vowels(char filepath[512]){
 }
 
 
-
 int main(int argc, char *argv[]){
 
     //check for filename in argument
     if(argc < 2){
-        printf("ERROR -- filename and extention not present as cmd line argument. \nUsage: ./count-vowels.out filename.txt\n\n");
+        printf("ERROR -- filename and extention not present as cmd line argument. \nUsage: ./count-vowels.out filepath/filename.txt\n\n");
         return 1;
     }
 
-    char filename[] = "";
+    char filename[256];
     strcpy(filename, argv[1]);
-
-
-    char cmd[512];
-    sprintf(cmd, "find / -iname %s 2>/dev/null | tail -n 1", filename);
-    FILE* shell = popen(cmd, "r");
-
-    char shell_output[512];  //will be full filepath of filename
-
-    fgets(shell_output, sizeof(shell_output), shell);
-
-    pclose(shell);
-
-
-/*
-    if(shell_output == ""){
-        printf("ERROR -- file not found on this system. Nothing to return.");
-        return 1;
-    }
-*/
-    get_num_vowels(shell_output);
-
+    
+    //printf("Filename arg: %s\n", filename);
+    
+    get_full_file_path(filename);
+    printf("Full file path: %s \n", filename);
+    
+    get_num_vowels(filename);
 
     return 0;
 }
+
+
+
+
+
